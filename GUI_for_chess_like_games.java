@@ -14,6 +14,7 @@ public class GUI_for_chess_like_games extends JFrame {
     private final JButton[][] buttons;
     private final int BOARD_SIZE;
     private PlayableLogic gameLogic;
+
     private final JLabel turnLabel = new JLabel("Player 1's Turn");
     private final JLabel playerTowWinsLabel = new JLabel("Player 2 Wins: 0");
     private final JLabel playerOneWinsLabel = new JLabel("Player 1 Wins: 0");
