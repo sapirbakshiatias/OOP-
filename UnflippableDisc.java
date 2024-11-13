@@ -1,5 +1,5 @@
 public class UnflippableDisc implements Disc {
-    Player owner;
+    private Player owner;
     public UnflippableDisc(Player player) {
         owner = player;
     }

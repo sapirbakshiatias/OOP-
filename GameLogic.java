@@ -3,7 +3,8 @@ import java.util.List;
 import java.util.Stack;
 
 public class GameLogic implements PlayableLogic {
-    private Disc[][] board;
+    private static final int SIZE = 8;
+    private Disc[][] board = new Disc[SIZE][SIZE];
     private Player firstPlayer;
     private Player secondPlayer;
     private boolean firstPlayerTurn;
@@ -35,12 +36,13 @@ public class GameLogic implements PlayableLogic {
     public Disc getDiscAtPosition(Position position) {
         if (position == null)
             return null;
+        if (board[position.row()][position.col()] == null) return null;
         return board[position.row()][position.col()];
     }
 
     @Override
     public int getBoardSize() {
-        return 8;
+        return board.length;
     }
 
     @Override
@@ -56,7 +58,7 @@ public class GameLogic implements PlayableLogic {
         //כן- תכניס לרשימה
 
 
-        return null;
+        return new ArrayList<>();
     }
 
     @Override
@@ -91,21 +93,22 @@ public class GameLogic implements PlayableLogic {
     }
 
     @Override
-    public void reset() {//*************************************************************************
-        board = new Disc[getBoardSize()][getBoardSize()];
+    public void reset() {
+        // clear
         for (int i = 0; i < getBoardSize(); i++) { //שורה
-            for (int j = 0; j < getBoardSize(); j++) { //עמודה
+            //עמודה
+            for (int j = 0; j < getBoardSize(); j++)
                 board[i][j] = null;
-            }
-        }
+        // setup
+        board[3][3] = new SimpleDisc(getFirstPlayer());
+        board[4][4] = new SimpleDisc(getFirstPlayer());
+        board[3][4] = new SimpleDisc(getSecondPlayer());
+        board[4][3] = new SimpleDisc(getSecondPlayer());
     }
 
     @Override
     public void undoLastMove() {
-
     }
-
-    ///////////////////
 
     public List<Disc> getNeighbors(int row, int col) {
         List<Disc> neighbors = new ArrayList<>();
@@ -134,5 +137,8 @@ public class GameLogic implements PlayableLogic {
         return neighbors;
     }
 
+//    public List<Disc> getFlipableDiscs (Disc disc){
+//
+//    }
 }
 

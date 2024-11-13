@@ -1,7 +1,7 @@
 public class BombDisc implements Disc {
     private Player owner;
     public BombDisc(Player Player) {
-        owner = Player;
+        this.owner = Player;
     }
     public BombDisc(BombDisc disc){
         this.owner = disc.getOwner();
