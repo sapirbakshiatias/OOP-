@@ -7,16 +7,16 @@ public class GameLogic implements PlayableLogic {
     private Disc[][] board = new Disc[SIZE][SIZE];
     private Player firstPlayer;
     private Player secondPlayer;
-    private boolean firstPlayerTurn;
-    private Stack<Move> history;
+    private ArrayList<Position> validMoves;
+
+    private boolean p1Turn;
 
     @Override
     public boolean locate_disc(Position a, Disc disc) {
-        if ((board[a.row()][a.col()] != null))// this pos is occupied
+        if (positionIsEmpty(a) || !validMoves.contains(a))
             return false;
-        if (countFlips(a) == 0) //no discs are flippable
-            return false;
-        //board[a.row()][a.col()] = disc;
+        board[a.row()][a.col()] = disc;
+        //TODO 1.flip (use direction) 2.save in history and 3.wirte string
 
         //    // הופכים את כל הדיסקים בעמדות שהוחזרו על ידי getFlippablePositions
         //    for (Position pos : flips) {
@@ -34,9 +34,8 @@ public class GameLogic implements PlayableLogic {
 
     @Override
     public Disc getDiscAtPosition(Position position) {
-        if (position == null)
+        if (position == null || positionIsEmpty(position))
             return null;
-        if (board[position.row()][position.col()] == null) return null;
         return board[position.row()][position.col()];
     }
 
@@ -84,26 +83,27 @@ public class GameLogic implements PlayableLogic {
 
     @Override
     public boolean isFirstPlayerTurn() {
-        return true;
+        return p1Turn;
     }
 
     @Override
     public boolean isGameFinished() {
-        return false;
+        return ValidMoves().isEmpty();
     }
 
     @Override
     public void reset() {
+        //TODO bombs + unflappable + turn
         // clear
-        for (int i = 0; i < getBoardSize(); i++) { //שורה
-            //עמודה
+        for (int i = 0; i < getBoardSize(); i++) {
             for (int j = 0; j < getBoardSize(); j++)
                 board[i][j] = null;
-        // setup
-        board[3][3] = new SimpleDisc(getFirstPlayer());
-        board[4][4] = new SimpleDisc(getFirstPlayer());
-        board[3][4] = new SimpleDisc(getSecondPlayer());
-        board[4][3] = new SimpleDisc(getSecondPlayer());
+            // setup
+            board[(SIZE + 1) / 2][(SIZE + 1) / 2] = new SimpleDisc(getFirstPlayer()); //[4][4]
+            board[(SIZE - 1) / 2][(SIZE - 1) / 2] = new SimpleDisc(getFirstPlayer()); //[3][3]
+            board[(SIZE + 1) / 2][(SIZE - 1) / 2] = new SimpleDisc(getSecondPlayer()); //[4][3]
+            board[(SIZE - 1) / 2][(SIZE + 1) / 2] = new SimpleDisc(getSecondPlayer()); //[3][4]
+        }
     }
 
     @Override
@@ -135,6 +135,10 @@ public class GameLogic implements PlayableLogic {
             }
         }
         return neighbors;
+    }
+
+    public boolean positionIsEmpty(Position position) {
+        return (board[position.row()][position.col()] == null);
     }
 
 //    public List<Disc> getFlipableDiscs (Disc disc){
