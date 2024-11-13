@@ -22,7 +22,7 @@ public class GameLogic implements PlayableLogic {
         //    for (Position pos : flips) {
         //        board[pos.getX()][pos.getY()].flip();
         //    }
-        //
+        //jhddslksk
         //    // שמירת המהלך במחסנית לצורך אפשרות של Undo
         //    moveHistory.push(new Move(a, disc));
         //
