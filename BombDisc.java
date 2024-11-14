@@ -18,6 +18,6 @@ public class BombDisc implements Disc {
 
     @Override
     public String getType() {
-        return "BombDisc";
+        return "💣";
     }
 }

@@ -1,4 +1,5 @@
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Stack;
 
@@ -7,16 +8,17 @@ public class GameLogic implements PlayableLogic {
     private Disc[][] board = new Disc[SIZE][SIZE];
     private Player firstPlayer;
     private Player secondPlayer;
-    private ArrayList<Position> validMoves;
-
     private boolean p1Turn;
+    private ArrayList<Position> validMoves;
+    int[] rowDirections = {-1, -1, -1, 0, 0, 1, 1, 1};
+    int[] colDirections = {-1, 0, 1, -1, 1, -1, 0, 1};
 
     @Override
     public boolean locate_disc(Position a, Disc disc) {
         if (positionIsEmpty(a) || !validMoves.contains(a))
             return false;
         board[a.row()][a.col()] = disc;
-        //TODO 1.flip (use direction) 2.save in history and 3.wirte string
+        //TODO 1.flip (use direction) 2.save in history and 3.wirte string 4.bomb
 
         //    // הופכים את כל הדיסקים בעמדות שהוחזרו על ידי getFlippablePositions
         //    for (Position pos : flips) {
@@ -110,28 +112,20 @@ public class GameLogic implements PlayableLogic {
     public void undoLastMove() {
     }
 
-    public List<Disc> getNeighbors(int row, int col) {
-        List<Disc> neighbors = new ArrayList<>();
+    public List<Position> getNeighbors(int row, int col) {
+        List<Position> neighbors = new ArrayList<>();
         Disc currentDisc = board[row][col];
 
-        //if (currentDisc == null) return neighbors; //
+        if (currentDisc == null) return neighbors;
+        for (int i = 0; i < 8; i++) {
+            int x = row + rowDirections[i];
+            int y = col + colDirections[i];
 
-        int[][] directions = {
-                {-1, -1}, {-1, 0}, {-1, 1},
-                {0, 1}, {1, 1}, {1, 0},
-                {1, -1}, {0, -1}
-        };
-
-        for (int[] direction : directions) {
-            int x = row + direction[0];
-            int y = col + direction[1];
-
-            if (x < 0 || x > getBoardSize() || y < 0 || y > getBoardSize()) continue;
+            if (isInBounds(x, y)) continue;
             Disc neighborDisc = board[x][y];
-
             if (neighborDisc == null || neighborDisc.getOwner().equals(currentDisc.getOwner())) continue;
             {
-                neighbors.add(neighborDisc);
+                neighbors.add(new Position(x, y));
             }
         }
         return neighbors;
@@ -141,8 +135,49 @@ public class GameLogic implements PlayableLogic {
         return (board[position.row()][position.col()] == null);
     }
 
-//    public List<Disc> getFlipableDiscs (Disc disc){
+    //    public List<Disc> getFlipableDiscs (Disc disc){
 //
 //    }
+    public List<Position> flipInDirection(int row, int col, int rowD, int colD, boolean toFlip) {
+        List<Position> canBeFlipped = new ArrayList<Position>();
+
+        Player currentPlayer = isFirstPlayerTurn() ? firstPlayer : secondPlayer;
+        int numF = 0;
+        int x = row + rowD;
+        int y = col + colD;
+
+        while ((isInBounds(x, y)) && (board[x][y] != null)) {
+            Disc currentDisc = board[x][y];
+
+            if (currentDisc.getOwner().equals(currentPlayer)) //same player
+                break;
+            if (currentDisc instanceof UnflippableDisc){ //unflappable disc
+                x += rowD;
+                y += colD;
+                continue;}
+
+            canBeFlipped.add(new Position(x,y));
+            numF += 1;
+
+            x += rowD;
+            y += colD;
+        }
+        //check if ends at current player
+        if ((isInBounds(x,y)) && board[x][y] != null && board[x][y].getOwner().equals(currentPlayer)) {
+            if (toFlip) {
+                for (Position pos : canBeFlipped) {
+                    board[pos.row()][pos.col()].setOwner(currentPlayer);
+                }
+            }
+        return canBeFlipped;
+        }
+        return Collections.emptyList();
+    }
+
+    public boolean isInBounds(int row, int col) {
+        return row < 0 || row > getBoardSize() || col < 0 || col > getBoardSize();
+
+    }
+
 }
 
