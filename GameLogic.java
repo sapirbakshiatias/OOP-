@@ -6,29 +6,26 @@ public class GameLogic implements PlayableLogic {
     private Player firstPlayer;
     private Player secondPlayer;
     private boolean p1Turn;
-    private ArrayList<Position> validMoves = new ArrayList<>();
+    private ArrayList<Position> validMoves;
     int[] rowDirections = {-1, -1, -1, 0, 0, 1, 1, 1};
     int[] colDirections = {-1, 0, 1, -1, 1, -1, 0, 1};
-    private Map<Position, Integer> flipCounts = new HashMap<>();
     private Stack<Move> moveHistory = new Stack<>();
+    private Stack<Disc[][]> boardHistory = new Stack<>();
 
 
     @Override
     public boolean locate_disc(Position a, Disc disc) {
         //TODO wirte string
-        System.out.println("Trying to locate disc at: " + a + " for player: " + disc.getOwner());
-        if (positionIsEmpty(a) || !validMoves.contains(a)) {
-            System.out.println("Invalid move: position is not empty or not valid.");
+        if (!positionIsEmpty(a) || !validMoves.contains(a)) {
             return false;
         }
+        boardHistory.push(copyBoard());
 
         board[a.row()][a.col()] = disc;
-        System.out.println("Disc placed. Flipping in direction...");
         flipInDirection(a.row(), a.col(), true);
 
         moveHistory.push(new Move(a, disc));
         p1Turn = !p1Turn; // Switch turn
-        System.out.println("Move completed. Turn switched to: " + (p1Turn ? "Player 1" : "Player 2"));
         return true;
     }
 
@@ -46,9 +43,8 @@ public class GameLogic implements PlayableLogic {
 
     @Override
     public List<Position> ValidMoves() {
-        flipCounts.clear();
-        validMoves.clear();
-        System.out.println("Calculating valid moves...");
+
+        validMoves = new ArrayList<>();
         for (int row = 0; row < getBoardSize(); row++) {
             for (int col = 0; col < getBoardSize(); col++) {
                 Position position = new Position(row, col);
@@ -56,8 +52,7 @@ public class GameLogic implements PlayableLogic {
                     int flips = countFlips(position);
                     if (flips > 0) {
                         validMoves.add(position);
-                        flipCounts.put(position, flips);
-                        System.out.println("Valid move found: " + position + " with " + flips + " flips.");
+                        //     flipCounts.put(position, flips);
                     }
                 }
             }
@@ -127,7 +122,6 @@ public class GameLogic implements PlayableLogic {
 
     @Override
     public void reset() {
-        //TODO bombs + unflappable + turn
         for (int i = 0; i < getBoardSize(); i++) {
             for (int j = 0; j < getBoardSize(); j++)
                 board[i][j] = null;
@@ -141,33 +135,18 @@ public class GameLogic implements PlayableLogic {
             p1Turn = true;
         }
     }
-
     @Override
     public void undoLastMove() {
+        if (boardHistory.isEmpty() || moveHistory.isEmpty()) {
+            System.out.println("No moves to undo.");
+            return;
+        }
+        board = boardHistory.pop();
+        moveHistory.pop();
+        p1Turn = !p1Turn;
+        validMoves = new ArrayList<>(ValidMoves());
     }
 
-//    public List<Position> getNeighbors(int row, int col) {
-//        List<Position> neighbors = new ArrayList<>();
-//        Disc currentDisc = board[row][col];
-//
-//        if (currentDisc == null) return neighbors;
-//        for (int i = 0; i < 8; i++) {
-//            int x = row + rowDirections[i];
-//            int y = col + colDirections[i];
-//
-//            if (isInBounds(x, y)) continue;
-//            Disc neighborDisc = board[x][y];
-//            if (neighborDisc == null || neighborDisc.getOwner().equals(currentDisc.getOwner())) continue;
-//            {
-//                neighbors.add(new Position(x, y));
-//            }
-//        }
-//        return neighbors;
-//    }
-
-    //    public boolean positionIsEmpty(Position position) {
-//        return (board[position.row()][position.col()] == null);
-//    }
     public boolean positionIsEmpty(Position position) {
         boolean empty = (board[position.row()][position.col()] == null);
         System.out.println("Position " + position + " is " + (empty ? "empty" : "occupied"));
@@ -188,27 +167,27 @@ public class GameLogic implements PlayableLogic {
             while (isInBounds(x, y) && board[x][y] != null) {
                 Disc currentDisc = board[x][y];
 
-//                // If we find a BombDisc, we handle it separately
-//                if (currentDisc instanceof BombDisc) {
-//                    // Check the 8 neighboring positions around the BombDisc
-//                    for (int j = 0; j < rowDirections.length; j++) {
-//                        int neighborX = x + rowDirections[j];
-//                        int neighborY = y + colDirections[j];
-//
-//                        if (isInBounds(neighborX, neighborY) && board[neighborX][neighborY] != null) {
-//                            Disc neighborDisc = board[neighborX][neighborY];
-//
-//                            // If the neighbor has the same owner and is not an UnflippableDisc, flip it
-//                            if (neighborDisc.getOwner().equals(currentPlayer) && !(neighborDisc instanceof UnflippableDisc)) {
-//                                if (toFlip) {
-//                                    board[neighborX][neighborY].setOwner(currentPlayer);
-//                                }
-//                                totalFlips++;
-//                            }
-//                        }
-//                    }
-//                }
+                // If we find a BombDisc, we handle it separately
+                if (currentDisc instanceof BombDisc)
+                    bombDisc(int x, int y);
+                    // Check the 8 neighboring positions around the BombDisc
+                    for (int j = 0; j < rowDirections.length; j++) {
+                        int neighborX = x + rowDirections[j];
+                        int neighborY = y + colDirections[j];
 
+                        if (isInBounds(neighborX, neighborY) && board[neighborX][neighborY] != null) {
+                            Disc neighborDisc = board[neighborX][neighborY];
+
+                            // If the neighbor has the same owner and is not an UnflippableDisc, flip it
+                            if (neighborDisc.getOwner().equals(currentPlayer) && !(neighborDisc instanceof UnflippableDisc)) {
+                                if (toFlip) {
+                                    board[neighborX][neighborY].setOwner(currentPlayer);
+                                }
+                                totalFlips++;
+                            }
+                        }
+                    }
+                }
                 // If it's the current player's disc, we flip the captured discs in this direction
                 if (currentDisc.getOwner().equals(currentPlayer)) {
                     if (toFlip) {
@@ -219,59 +198,42 @@ public class GameLogic implements PlayableLogic {
                     totalFlips += canBeFlipped.size();
                     break;
                 }
-
                 // If we hit an UnflippableDisc, stop processing this direction
                 if (currentDisc instanceof UnflippableDisc) {
                     break;
                 }
-
                 // If the disc is not the current player's, add it to the list of possible flips
                 canBeFlipped.add(new Position(x, y));
                 x += rowD;
                 y += colD;
             }
         }
-
         return totalFlips;
     }
-
 
     public boolean isInBounds(int row, int col) {
         return row >= 0 && row < getBoardSize() && col >= 0 && col < getBoardSize();
     }
-
-//    public void undoLastMove() {
-//        if (moveHistory.isEmpty()) {
-//            System.out.println("No moves to undo.");
-//            return;
-//        }
-
-//        // Retrieve the last move from the history
-//        Move lastMove = moveHistory.pop();
-//        Position lastPosition = lastMove.getPosition();
-//        Disc lastDisc = lastMove.getDisc();
-//
-//        // Revert the board state by removing the last placed disc
-//        board[lastPosition.row()][lastPosition.col()] = null;
-//
-//        // If the last move was a BombDisc, we also need to undo flips made by the BombDisc
-//        if (lastDisc instanceof BombDisc) {
-//            // Revert the flips made by the bomb's neighbors
-//            for (int i = 0; i < rowDirections.length; i++) {
-//                int x = lastPosition.row() + rowDirections[i];
-//                int y = lastPosition.col() + colDirections[i];
-//                if (isInBounds(x, y) && board[x][y] != null && board[x][y].getOwner() != lastDisc.getOwner()) {
-//                    // Revert the flip of the neighbor
-//                    board[x][y].setOwner(null);  // Assuming null means no owner, i.e., the disk is flipped back to empty
-//                }
-//            }
-//        }
-//
-//        // Revert turn order (if needed)
-//        p1Turn = !p1Turn;
-//
-//        // Optionally, you could add other logic to undo any other game state changes (like score, special moves, etc.)
-
+    private Disc[][] copyBoard() {
+        Disc[][] copy = new Disc[SIZE][SIZE];
+        for (int i = 0; i < SIZE; i++) {
+            for (int j = 0; j < SIZE; j++) {
+                if (board[i][j] == null) {
+                    copy[i][j] = null;
+                } else {
+                    Disc disc = board[i][j];
+                    if (disc instanceof UnflippableDisc) {
+                        copy[i][j] = new UnflippableDisc(disc.getOwner());
+                    } else if (disc instanceof BombDisc) {
+                        copy[i][j] = new BombDisc(disc.getOwner());
+                    } else {
+                        copy[i][j] = new SimpleDisc(disc.getOwner());
+                    }
+                }
+            }
+        }
+        return copy;
+    }
 
 }
 
