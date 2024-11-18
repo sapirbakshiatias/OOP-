@@ -1,7 +1,4 @@
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Stack;
+import java.util.*;
 
 public class GameLogic implements PlayableLogic {
     private static final int SIZE = 8;
@@ -12,12 +9,16 @@ public class GameLogic implements PlayableLogic {
     private ArrayList<Position> validMoves;
     int[] rowDirections = {-1, -1, -1, 0, 0, 1, 1, 1};
     int[] colDirections = {-1, 0, 1, -1, 1, -1, 0, 1};
+    private Map<Position, Integer> flipCounts = new HashMap<>();
+
 
     @Override
     public boolean locate_disc(Position a, Disc disc) {
         if (positionIsEmpty(a) || !validMoves.contains(a))
             return false;
         board[a.row()][a.col()] = disc;
+
+
         //TODO 1.flip (use direction) 2.save in history and 3.wirte string 4.bomb
 
         //    // הופכים את כל הדיסקים בעמדות שהוחזרו על ידי getFlippablePositions
@@ -48,18 +49,23 @@ public class GameLogic implements PlayableLogic {
 
     @Override
     public List<Position> ValidMoves() {
-        //האם אם אני ריק?
-        //לא- תמשיך הלאה
-        //כן- האם 8- סביבי ריקים?
-        //כן- תמשיך הלאה
-        //?לא-תעבור אחד אחד:  האם משוייך לשחקן הנכוחי?
-        //כן - תמשיך הלאה
-        //לא: האם יתהפכו דיסקיות?
-        //לא- תמשיך הלאה
-        //כן- תכניס לרשימה
+        List<Position> validPositions = new ArrayList<>();
+        flipCounts.clear();
 
+        for (int row = 0; row < getBoardSize(); row++) {
+            for (int col = 0; col < getBoardSize(); col++) {
+                Position position = new Position(row, col);
 
-        return new ArrayList<>();
+                if (positionIsEmpty(position)) {
+                    int flips = countFlips(position);
+                    if (flips > 0) {
+                        validPositions.add(position);
+                        flipCounts.put(position, flips);
+                    }
+                }
+            }
+        }
+        return validPositions;
     }
 
     @Override
@@ -135,15 +141,10 @@ public class GameLogic implements PlayableLogic {
         return (board[position.row()][position.col()] == null);
     }
 
-    //    public List<Disc> getFlipableDiscs (Disc disc){
-//
-//    }
-
     public int flipInDirection(int row, int col, boolean toFlip) {
         int totalFlips = 0;
         Player currentPlayer = isFirstPlayerTurn() ? firstPlayer : secondPlayer;
 
-        // עבור על כל 8 הכיוונים
         for (int i = 0; i < rowDirections.length; i++) {
             int rowD = rowDirections[i];
             int colD = colDirections[i];
@@ -151,60 +152,38 @@ public class GameLogic implements PlayableLogic {
             int y = col + colD;
             List<Position> canBeFlipped = new ArrayList<>();
 
-            // בדוק את הכיוון הנוכחי
             while (isInBounds(x, y) && board[x][y] != null) {
                 Disc currentDisc = board[x][y];
 
-                // אם פגשנו דיסק של אותו שחקן -> עצור
+                //belonging to the current player
                 if (currentDisc.getOwner().equals(currentPlayer)) {
                     if (toFlip) {
-                        // הופך את כל הדיסקים שנאספו אם צריך
                         for (Position pos : canBeFlipped) {
                             board[pos.row()][pos.col()].setOwner(currentPlayer);
                         }
                     }
-                    totalFlips += canBeFlipped.size(); // עדכן את מספר ההפיכות
+                    totalFlips += canBeFlipped.size();
                     break;
                 }
 
-                // אם דיסק אינו הפיך, דלג
+                // UnflippableDisc
                 if (currentDisc instanceof UnflippableDisc) {
                     break;
                 }
 
-                // הוסף למועמדים להפיכה
                 canBeFlipped.add(new Position(x, y));
                 x += rowD;
                 y += colD;
             }
         }
-        return totalFlips; // החזר את סך כל ההפיכות
+        return totalFlips;
     }
 
-    //check if ends at current player
-        if((
-
-    isInBounds(x, y))&&board[x][y]!=null&&board[x][y].
-
-    getOwner().
-
-    equals(currentPlayer))
-
-    {
-        if (toFlip) {
-            for (Position pos : canBeFlipped) {
-                board[pos.row()][pos.col()].setOwner(currentPlayer);
-            }
-        }
-        return canBeFlipped;
-    }
-        return Collections.emptyList();
-}
 
     public boolean isInBounds(int row, int col) {
-        return row < 0 || row > getBoardSize() || col < 0 || col > getBoardSize();
-
+        return row >= 0 && row < getBoardSize() && col >= 0 && col < getBoardSize();
     }
+
 
 }
 
