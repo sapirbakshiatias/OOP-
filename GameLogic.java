@@ -43,7 +43,6 @@ public class GameLogic implements PlayableLogic {
 
     @Override
     public List<Position> ValidMoves() {
-
         validMoves = new ArrayList<>();
         for (int row = 0; row < getBoardSize(); row++) {
             for (int col = 0; col < getBoardSize(); col++) {
@@ -123,18 +122,20 @@ public class GameLogic implements PlayableLogic {
     @Override
     public void reset() {
         for (int i = 0; i < getBoardSize(); i++) {
-            for (int j = 0; j < getBoardSize(); j++)
+            for (int j = 0; j < getBoardSize(); j++) {
                 board[i][j] = null;
-            // setup
-            board[(SIZE + 1) / 2][(SIZE + 1) / 2] = new SimpleDisc(getFirstPlayer()); //[4][4]
-            board[(SIZE - 1) / 2][(SIZE - 1) / 2] = new SimpleDisc(getFirstPlayer()); //[3][3]
-            board[(SIZE + 1) / 2][(SIZE - 1) / 2] = new SimpleDisc(getSecondPlayer()); //[4][3]
-            board[(SIZE - 1) / 2][(SIZE + 1) / 2] = new SimpleDisc(getSecondPlayer()); //[3][4]
-            firstPlayer.reset_bombs_and_unflippedable();
-            secondPlayer.reset_bombs_and_unflippedable();
-            p1Turn = true;
+            }
         }
+        // setup
+        board[(SIZE + 1) / 2][(SIZE + 1) / 2] = new SimpleDisc(getFirstPlayer()); //[4][4]
+        board[(SIZE - 1) / 2][(SIZE - 1) / 2] = new SimpleDisc(getFirstPlayer()); //[3][3]
+        board[(SIZE + 1) / 2][(SIZE - 1) / 2] = new SimpleDisc(getSecondPlayer()); //[4][3]
+        board[(SIZE - 1) / 2][(SIZE + 1) / 2] = new SimpleDisc(getSecondPlayer()); //[3][4]
+        firstPlayer.reset_bombs_and_unflippedable();
+        secondPlayer.reset_bombs_and_unflippedable();
+        p1Turn = true;
     }
+
     @Override
     public void undoLastMove() {
         if (boardHistory.isEmpty() || moveHistory.isEmpty()) {
@@ -156,6 +157,8 @@ public class GameLogic implements PlayableLogic {
     public int flipInDirection(int row, int col, boolean toFlip) {
         int totalFlips = 0;
         Player currentPlayer = isFirstPlayerTurn() ? firstPlayer : secondPlayer;
+        List<Position> allFlippableDiscs = new ArrayList<>(); // רשימה מרכזית
+
 
         for (int i = 0; i < rowDirections.length; i++) {
             int rowD = rowDirections[i];
@@ -167,53 +170,68 @@ public class GameLogic implements PlayableLogic {
             while (isInBounds(x, y) && board[x][y] != null) {
                 Disc currentDisc = board[x][y];
 
-                // If we find a BombDisc, we handle it separately
-                if (currentDisc instanceof BombDisc)
-                    bombDisc(int x, int y);
-                    // Check the 8 neighboring positions around the BombDisc
-                    for (int j = 0; j < rowDirections.length; j++) {
-                        int neighborX = x + rowDirections[j];
-                        int neighborY = y + colDirections[j];
-
-                        if (isInBounds(neighborX, neighborY) && board[neighborX][neighborY] != null) {
-                            Disc neighborDisc = board[neighborX][neighborY];
-
-                            // If the neighbor has the same owner and is not an UnflippableDisc, flip it
-                            if (neighborDisc.getOwner().equals(currentPlayer) && !(neighborDisc instanceof UnflippableDisc)) {
-                                if (toFlip) {
-                                    board[neighborX][neighborY].setOwner(currentPlayer);
-                                }
-                                totalFlips++;
-                            }
-                        }
-                    }
+                if (currentDisc instanceof BombDisc) {
+                    allFlippableDiscs.add(new Position(x, y));
+                    addBombNeighborsToFlipList(x, y, currentPlayer, allFlippableDiscs);
+                    x += rowD;
+                    y += colD;
+                    continue;
                 }
-                // If it's the current player's disc, we flip the captured discs in this direction
+
                 if (currentDisc.getOwner().equals(currentPlayer)) {
-                    if (toFlip) {
-                        for (Position pos : canBeFlipped) {
-                            board[pos.row()][pos.col()].setOwner(currentPlayer);
-                        }
-                    }
-                    totalFlips += canBeFlipped.size();
+                    allFlippableDiscs.addAll(canBeFlipped);
                     break;
                 }
-                // If we hit an UnflippableDisc, stop processing this direction
+
                 if (currentDisc instanceof UnflippableDisc) {
-                    break;
+                    x += rowD;
+                    y += colD;
+                    continue;
                 }
-                // If the disc is not the current player's, add it to the list of possible flips
+
                 canBeFlipped.add(new Position(x, y));
                 x += rowD;
                 y += colD;
             }
         }
+        if (toFlip) {
+            for (Position pos : allFlippableDiscs) {
+                board[pos.row()][pos.col()].setOwner(currentPlayer);
+            }
+        }
+        totalFlips = allFlippableDiscs.size();
         return totalFlips;
     }
 
+    private void addBombNeighborsToFlipList(int bombRow, int bombCol, Player currentPlayer, List<Position> allFlippableDiscs) {
+        for (int j = 0; j < rowDirections.length; j++) {
+            int x = bombRow + rowDirections[j];
+            int y = bombCol + colDirections[j];
+
+            if (isInBounds(x, y) && board[x][y] != null) {
+                Disc neighborDisc = board[x][y];
+
+                    if (neighborDisc instanceof UnflippableDisc) {
+                        continue;
+                    }
+
+                    if (neighborDisc instanceof BombDisc) {
+                        addBombNeighborsToFlipList(x, y, currentPlayer, allFlippableDiscs);
+                        continue;
+                    }
+
+                    if (!neighborDisc.getOwner().equals(currentPlayer)) {
+                        allFlippableDiscs.add(new Position(x, y));
+                    }
+                }
+            }
+        }
+
+
     public boolean isInBounds(int row, int col) {
-        return row >= 0 && row < getBoardSize() && col >= 0 && col < getBoardSize();
+        return ((row >= 0) && (row < getBoardSize()) && (col >= 0) && (col < getBoardSize()));
     }
+
     private Disc[][] copyBoard() {
         Disc[][] copy = new Disc[SIZE][SIZE];
         for (int i = 0; i < SIZE; i++) {
