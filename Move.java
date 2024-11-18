@@ -8,13 +8,11 @@ public class Move {
         this.disc = d;
     }
     public Position position() {
-        return pos;
+        return null;
     }
 
     public Disc disc() {
-        return disc;
+        return null;
     }
-//    public Position[][] undo(){
-//
-//    }
+
 }

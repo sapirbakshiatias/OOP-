@@ -7,8 +7,7 @@ public class Position{
     public Position(int row, int col) {
         this.currentCol = col;
         this.currentRow = row;
-//        currentDisc = null;
-//        isEmpty = true;
+
     }
     public int col(){
         return currentCol;
@@ -17,20 +16,16 @@ public class Position{
     public int row(){
         return currentRow;
     }
-//    public boolean getIsEmpty(){
-//        return isEmpty;}
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        Position position = (Position) obj;
+        return currentRow == position.currentRow && currentCol == position.currentCol;
+    }
+    @Override
+    public String toString() {
+        return "Position[x=" + currentCol + ", y=" + currentRow + "]";
+    }
 
-//    public void setIsEmpty(){
-//        this.isEmpty = true;
-//    }
-
-//    public void setDisc(Disc disc){
-//        currentDisc = disc;
-//        this.isEmpty = false;
-//    }
-
-//    public Disc getDisc(){
-//        return currentDisc;
-//    }
 
 }
