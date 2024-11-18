@@ -64,7 +64,7 @@ public class GameLogic implements PlayableLogic {
 
     @Override
     public int countFlips(Position a) {
-        return 0;
+        return flipInDirection(a.row(), a.col(), false);
     }
 
     @Override
@@ -138,41 +138,68 @@ public class GameLogic implements PlayableLogic {
     //    public List<Disc> getFlipableDiscs (Disc disc){
 //
 //    }
-    public List<Position> flipInDirection(int row, int col, int rowD, int colD, boolean toFlip) {
-        List<Position> canBeFlipped = new ArrayList<Position>();
 
+    public int flipInDirection(int row, int col, boolean toFlip) {
+        int totalFlips = 0;
         Player currentPlayer = isFirstPlayerTurn() ? firstPlayer : secondPlayer;
-        int numF = 0;
-        int x = row + rowD;
-        int y = col + colD;
 
-        while ((isInBounds(x, y)) && (board[x][y] != null)) {
-            Disc currentDisc = board[x][y];
+        // עבור על כל 8 הכיוונים
+        for (int i = 0; i < rowDirections.length; i++) {
+            int rowD = rowDirections[i];
+            int colD = colDirections[i];
+            int x = row + rowD;
+            int y = col + colD;
+            List<Position> canBeFlipped = new ArrayList<>();
 
-            if (currentDisc.getOwner().equals(currentPlayer)) //same player
-                break;
-            if (currentDisc instanceof UnflippableDisc){ //unflappable disc
+            // בדוק את הכיוון הנוכחי
+            while (isInBounds(x, y) && board[x][y] != null) {
+                Disc currentDisc = board[x][y];
+
+                // אם פגשנו דיסק של אותו שחקן -> עצור
+                if (currentDisc.getOwner().equals(currentPlayer)) {
+                    if (toFlip) {
+                        // הופך את כל הדיסקים שנאספו אם צריך
+                        for (Position pos : canBeFlipped) {
+                            board[pos.row()][pos.col()].setOwner(currentPlayer);
+                        }
+                    }
+                    totalFlips += canBeFlipped.size(); // עדכן את מספר ההפיכות
+                    break;
+                }
+
+                // אם דיסק אינו הפיך, דלג
+                if (currentDisc instanceof UnflippableDisc) {
+                    break;
+                }
+
+                // הוסף למועמדים להפיכה
+                canBeFlipped.add(new Position(x, y));
                 x += rowD;
                 y += colD;
-                continue;}
-
-            canBeFlipped.add(new Position(x,y));
-            numF += 1;
-
-            x += rowD;
-            y += colD;
-        }
-        //check if ends at current player
-        if ((isInBounds(x,y)) && board[x][y] != null && board[x][y].getOwner().equals(currentPlayer)) {
-            if (toFlip) {
-                for (Position pos : canBeFlipped) {
-                    board[pos.row()][pos.col()].setOwner(currentPlayer);
-                }
             }
-        return canBeFlipped;
         }
-        return Collections.emptyList();
+        return totalFlips; // החזר את סך כל ההפיכות
     }
+
+    //check if ends at current player
+        if((
+
+    isInBounds(x, y))&&board[x][y]!=null&&board[x][y].
+
+    getOwner().
+
+    equals(currentPlayer))
+
+    {
+        if (toFlip) {
+            for (Position pos : canBeFlipped) {
+                board[pos.row()][pos.col()].setOwner(currentPlayer);
+            }
+        }
+        return canBeFlipped;
+    }
+        return Collections.emptyList();
+}
 
     public boolean isInBounds(int row, int col) {
         return row < 0 || row > getBoardSize() || col < 0 || col > getBoardSize();
