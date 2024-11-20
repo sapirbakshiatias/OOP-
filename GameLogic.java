@@ -21,7 +21,10 @@ public class GameLogic implements PlayableLogic {
 
     @Override
     public boolean locate_disc(Position a, Disc disc) {
+        if (positionIsEmpty(a)){
+        System.out.println("position is empty - locate");}
         if (!positionIsEmpty(a) || !validMoves.contains(a)) {
+        System.out.println("position is empty - locate 2");
             return false;
         }
         boardHistory.push(copyBoard());
@@ -39,11 +42,18 @@ public class GameLogic implements PlayableLogic {
 
     @Override
     public Disc getDiscAtPosition(Position position) {
-        if (position == null || positionIsEmpty(position))
+        if (board[position.row()][position.col()] == null) {
+            System.out.println("position is empty - getAtPosition");
             return null;
-        return board[position.row()][position.col()];
+        }
+        if (Objects.equals(board[position.row()][position.col()].getType(), "⭕")) {
+            return new UnflippableDisc(board[position.row()][position.col()].getOwner());
+        }
+        if (Objects.equals(board[position.row()][position.col()].getType(), "💣")) {
+            return new BombDisc(board[position.row()][position.col()].getOwner());
+        }
+        return new SimpleDisc(board[position.row()][position.col()].getOwner());
     }
-
     @Override
     public int getBoardSize() {
         return board.length;
@@ -116,12 +126,13 @@ public class GameLogic implements PlayableLogic {
                 }
             }
         }
-        int win_disc = max(player_1_discs, player_2_discs);
-        int loser_disc = min(player_1_discs, player_2_discs);
-        String winner = player_1_discs >= player_2_discs ? "1" : "2";
-        String loser = player_1_discs < player_2_discs ? "1" : "2";
-        System.out.printf("Player %s wins with %d discs! Player %s had %d discs.\n\n", winner, win_disc, loser, loser_disc);
-        if (winner.equals("1")) {
+        System.out.printf("Player %s wins with %d discs! Player %s had %d discs.\n\n",
+                player_1_discs >= player_2_discs ? "1" : "2",
+                Math.max(player_1_discs, player_2_discs),
+                player_1_discs < player_2_discs ? "1" : "2",
+                Math.min(player_1_discs, player_2_discs));
+
+        if (player_1_discs >= player_2_discs) {
             firstPlayer.addWin();
         } else {
             secondPlayer.addWin();
@@ -162,12 +173,14 @@ public class GameLogic implements PlayableLogic {
         p1Turn = !p1Turn;
         validMoves = new ArrayList<>(ValidMoves());
         System.out.println();
-
     }
 
     public boolean positionIsEmpty(Position position) {
         if (position == null)
-            return false;
+            return true;
+        if (board[position.row()][position.col()] == null) {
+            System.out.println("position is empty - function");
+        }
         return (board[position.row()][position.col()] == null);
     }
 
@@ -176,7 +189,6 @@ public class GameLogic implements PlayableLogic {
         Player currentPlayer = isFirstPlayerTurn() ? firstPlayer : secondPlayer;
         List<Position> tempFlippableDiscs = new ArrayList<>();
         bombNeighborsToFlip = new ArrayList<>();
-
 
         for (int i = 0; i < rowDirections.length; i++) {
             int rowD = rowDirections[i];
@@ -204,7 +216,6 @@ public class GameLogic implements PlayableLogic {
                                 board[pos.row()][pos.col()].setOwner(currentPlayer);
                                 System.out.println("Player " + (isFirstPlayerTurn() ? "1 " : "2 ") + "flipped the " + currentDisc.getType() + " in " + "(" +pos.row() +"," +pos.col() + ")");
                                 //FIXME לזהות פצצה שמתהפכת
-
                             }
                         }
 //                            for (Position pos : canBeFlipped) {
@@ -284,6 +295,5 @@ public class GameLogic implements PlayableLogic {
         }
         return copy;
     }
-
 }
 
