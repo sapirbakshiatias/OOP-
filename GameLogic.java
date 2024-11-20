@@ -1,5 +1,7 @@
 import java.util.*;
 
+import static java.lang.Math.*;
+
 public class GameLogic implements PlayableLogic {
     private static final int SIZE = 8;
     private Disc[][] board = new Disc[SIZE][SIZE];
@@ -111,8 +113,8 @@ public class GameLogic implements PlayableLogic {
                 }
             }
         }
-        int win_disc = Math.max(player_1_discs, player_2_discs);
-        int loser_disc = Math.min(player_1_discs, player_2_discs);
+        int win_disc = max(player_1_discs, player_2_discs);
+        int loser_disc = min(player_1_discs, player_2_discs);
         String winner = player_1_discs >= player_2_discs ? "1" : "2";
         String loser = player_1_discs < player_2_discs ? "1" : "2";
         System.out.printf("Player %s wins with %d discs! Player %s had %d discs.\n\n", winner, win_disc, loser, loser_disc);
