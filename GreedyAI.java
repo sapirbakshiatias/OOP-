@@ -8,29 +8,38 @@ public class GreedyAI extends AIPlayer {
 
     @Override
     public Move makeMove(PlayableLogic gameStatus) {
-        List<Position> validMoves = gameStatus.ValidMoves();
-        if (validMoves.isEmpty()) {
-            System.out.println("validMoves. isEmpty");
-            return null;
-        } return new Move(validMoves.getFirst(),new SimpleDisc(this));
-//        }
-//        Position bestMove = null;
-//        int maxFlips = -1;
-//
-//        Comparator<Position> positionComparator = new ComCol().thenComparing(new CompRow());
-//
-//        for (Position move : validMoves) {
-//            int flips = gameStatus.countFlips(move);
-//            if (flips > maxFlips) {
-//                maxFlips = flips;
-//                bestMove = move;
-//            } else if (flips == maxFlips) {
-//                if (positionComparator.compare(move, bestMove) > 0) {
-//                    bestMove = move;
-//                }
-//            }
-//        }
-//        return new Move(bestMove, isPlayerOne() ? new SimpleDisc(this) : new SimpleDisc(this));
-    }
+        if (gameStatus instanceof GameLogic gameLogic) {
 
+            List<Position> validMoves = gameStatus.ValidMoves();
+            if (validMoves.isEmpty()) {
+                gameLogic.isGameFinished();
+                gameLogic.reset();
+            } else {
+                Position bestMove = null;
+                int maxFlips = -1;
+
+                Comparator<Position> positionComparator = new ComCol().thenComparing(new CompRow());
+
+                for (Position move : validMoves) {
+                    int flips = gameStatus.countFlips(move);
+                    if (flips > maxFlips) {
+                        maxFlips = flips;
+                        bestMove = move;
+                    } else if (flips == maxFlips) {
+                        if (positionComparator.compare(move, bestMove) > 0) {
+                            bestMove = move;
+                        }
+                    }
+                }
+                Disc discToPlace = isPlayerOne() ? new SimpleDisc(this) : new SimpleDisc(this);
+                gameLogic.locate_disc(bestMove, discToPlace);
+                return new Move(bestMove, discToPlace);
+            }
+        }
+
+        Position endGamePosition = new Position(9, 9);
+        Disc dummyDisc = new SimpleDisc(this);
+        return new Move(endGamePosition, dummyDisc);
+    }
 }
+

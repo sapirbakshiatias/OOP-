@@ -33,27 +33,19 @@ public class RandomAI extends AIPlayer {
     private Disc chooseRandomDisc() {
         Random rand = new Random();
 
-        // יצירת רשימה של 32 דיסקים (בבחירת דיסק אקראי לכל שחקן)
         List<Disc> discs = new ArrayList<>();
 
-        // הוסף 3 דיסקים מסוג UnflippableDisc מתוך 32
         for (int i = 0; i < 3; i++) {
             discs.add(new UnflippableDisc(this));
         }
-
-        // הוסף 2 דיסקים מסוג BombDisc מתוך 32
         for (int i = 0; i < 2; i++) {
             discs.add(new BombDisc(this));
         }
-
-        // הוסף דיסקים רגילים SimpleDisc (עד שמונה)
         int remainingDiscs = 32 - discs.size();
         for (int i = 0; i < remainingDiscs; i++) {
             discs.add(new SimpleDisc(this));
         }
-
-        // עכשיו, בחר דיסק אקראי מתוך הרשימה
         int randomIndex = rand.nextInt(discs.size());
-        return discs.get(randomIndex); // החזר את הדיסק שנבחר אקראית
+        return discs.get(randomIndex);
     }
 }
