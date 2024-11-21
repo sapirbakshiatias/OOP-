@@ -245,6 +245,7 @@ public class GameLogic implements PlayableLogic {
             }
         }
         return totalFlips;
+
     }
 
 
@@ -256,7 +257,7 @@ public class GameLogic implements PlayableLogic {
             int colD = colDirections[i];
             int b = x + rowD;
             int a = y + colD;
-            if (isInBounds(b, a)) { // בדוק שהמיקום חוקי
+            if (isInBounds(b, a)) {
                 Disc currentDisc = board[b][a];
                 if (isInBounds(b, a) && currentDisc != null
                         && currentDisc.getOwner() != player
