@@ -19,20 +19,37 @@ public class GameLogic implements PlayableLogic {
 
     @Override
     public boolean locate_disc(Position a, Disc disc) {
-        //TODO reduse flippable and bobm
-        if (positionIsEmpty(a)) {
-        }
+        Player currentPlayer = isFirstPlayerTurn() ? firstPlayer : secondPlayer;
+
         if (!positionIsEmpty(a) || !validMoves.contains(a)) {
             return false;
+        }
+
+        if (currentPlayer.getNumber_of_bombs() <= 0) {
+            if ("💣".equals(disc.getType())) {
+                return false;
+            }
+        }
+        if (currentPlayer.getNumber_of_unflippedable() <= 0) {
+            if ("⭕".equals(disc.getType())) {
+                return false;
+            }
         }
         boardHistory.push(copyBoard());
 
         board[a.row()][a.col()] = disc;
+
         System.out.println("Player " + (isFirstPlayerTurn() ? "1 " : "2 ") + "placed a " + disc.getType() + " in " + "(" + a.row() + "," + a.col() + ")");
 
         flipInDirection(a.row(), a.col(), true);
 
         moveHistory.push(new Move(a, disc));
+        if ("💣".equals(disc.getType())) {
+            currentPlayer.reduce_bomb();
+        }
+        if ("⭕".equals(disc.getType())) {
+            currentPlayer.reduce_unflippedable();
+        }
         p1Turn = !p1Turn; // Switch turn
         System.out.println();
         return true;
@@ -76,7 +93,6 @@ public class GameLogic implements PlayableLogic {
         }
         return validMoves;
     }
-
 
     @Override
     public int countFlips(Position a) {
@@ -158,20 +174,30 @@ public class GameLogic implements PlayableLogic {
 
     @Override
     public void undoLastMove() {
-        if (boardHistory.isEmpty() || moveHistory.isEmpty()) {
-            System.out.println("\tNo previous move available to undo.\n");
+        Player currentPlayer = isFirstPlayerTurn() ? firstPlayer : secondPlayer;
+//        if (boardHistory.isEmpty() || moveHistory.isEmpty()) {
+           // System.out.println("\tNo previous move available to undo.\n");
+            //return;}
+        if(boardHistory.isEmpty()){
+            System.out.println("bordhistory");
+            return;
+        }if(moveHistory.isEmpty()){
+            System.out.println("movehistory");
             return;
         }
         System.out.println("Undoing last move:");
-        //FIXME הדפסות.
-        for (int i = 0; i < reallyFliped.size(); i++) {
-            //מה שמדפיס הןא לא נכון משהו אם המערך
-            System.out.println("\tUndo: flipping back " + getDiscAtPosition(reallyFliped.get(i)).getType() + " in (" + reallyFliped.get(i).col() + ", " + reallyFliped.get(i).row() + ")");
-            //System.out.println("\tUndo: flipping back " + boardHistory.peek().[] disc().getType() + " in (" + boardHistory.peek().position().row() + ", " + boardHistory.peek().position().col() + ")");
+        System.out.println("\tUndo: removing " + moveHistory.peek().getDisc().getType() + " from " + "(" + moveHistory.peek().getPosition().row() + "," + moveHistory.peek().getPosition().col() + ")\n");
+
+        for (Position pos : reallyFliped) {
+            if (pos.equals("💣")){
+                System.out.println("bomb");
+                currentPlayer.number_of_bombs++;
+            }
         }
-
-        System.out.println("\tUndo: removing" + moveHistory.peek().getDisc().getType() + "from" + "(" + moveHistory.peek().getPosition().row() + "," + moveHistory.peek().getPosition().col() + ")\n");
-
+        if (moveHistory.peek().getDisc().getType() == "⭕"){
+            System.out.println("unflip");
+            currentPlayer.number_of_unflippedable++;
+        }
         moveHistory.pop();
         board = boardHistory.pop();
         p1Turn = !p1Turn;
@@ -201,34 +227,26 @@ public class GameLogic implements PlayableLogic {
                 Disc currentDisc = board[x][y];
 
                 if (currentDisc.getOwner().equals(currentPlayer)) {
-                    // אם מצאנו דיסק ששייך לשחקן הנוכחי אחרי דיסקים הפיכים
                     if (!canBeFlipped.isEmpty()) {
-                        // אם אנחנו בתהליך של flipping, נבצע את ההתהפכות
                         if (toFlip) {
                             for (Position pos : canBeFlipped) {
-                                // הוספת כל המיקומים של הדיסקים שהיו הפיכים לבעלים הנוכחי
                                 board[pos.row()][pos.col()].setOwner(currentPlayer);
                                 System.out.println("Player " + (isFirstPlayerTurn() ? "1 " : "2 ") + "flipped the disc in " + "(" + pos.row() + "," + pos.col() + ")");
 
-                                // אם מדובר בפצצה, נוסיף את השכנים שלה
                                 if ("💣".equals(board[pos.row()][pos.col()].getType())) {
                                     List<Position> bombPositions = new ArrayList<>();
                                     bombPositions.add(pos);
-                                    totalFlips += flipBomb(bombPositions); // הוספת השכנים של הפצצה
+                                    totalFlips += flipBomb(bombPositions);
                                 }
+                                reallyFliped.add(pos);
                             }
                         }
-
-                        // הוספת למניין ההתהפכויות את גודל הרצף
                         totalFlips += canBeFlipped.size();
                     }
                     break;
                 }
-
-                // אם מדובר בדיסק בלתי הפיך (Unflippable), נוודא שהוא לא שלנו
                 if (currentDisc instanceof UnflippableDisc) {
                     if (!currentDisc.getOwner().equals(currentPlayer)) {
-                        // המשך חיפוש בכיוון זה
                         x += rowD;
                         y += colD;
                         continue;
@@ -236,17 +254,13 @@ public class GameLogic implements PlayableLogic {
                         break;
                     }
                 }
-
-                // אם מדובר בדיסק הפיך (לא משנה אם הוא של השחקן הנוכחי או לא), נמשיך להוסיף אותו לרשימה
                 canBeFlipped.add(new Position(x, y));
                 x += rowD;
                 y += colD;
             }
         }
-
         return totalFlips;
     }
-
 
 
     private int flipBomb(List<Position> bombPositions) {
@@ -258,16 +272,13 @@ public class GameLogic implements PlayableLogic {
             int row = bombPos.row();
             int col = bombPos.col();
 
-            // לולאה לעבור על כל השכנים
             for (int i = 0; i < rowDirections.length; i++) {
                 int neighborRow = row + rowDirections[i];
                 int neighborCol = col + colDirections[i];
 
-                // בדיקה אם השכן בתחום הלוח
                 if (isInBounds(neighborRow, neighborCol)) {
                     Position neighborPos = new Position(neighborRow, neighborCol);
 
-                    // בדיקה אם המיקום כבר התווסף או אם הוא דיסק לא חוקי
                     if (!allFlippedDiscs.contains(neighborPos)
                             && board[neighborRow][neighborCol] != null
                             && !board[neighborRow][neighborCol].getOwner().equals(currentPlayer)
@@ -276,19 +287,16 @@ public class GameLogic implements PlayableLogic {
                         if ("💣".equals(board[neighborRow][neighborCol].getType())) {
                             tempFlippableDiscs.add(neighborPos);
                         }
-
-                        // הוספת השכן לרשימת ההתהפכויות
                         if (allFlippedDiscs.add(neighborPos)) {
                             board[neighborRow][neighborCol].setOwner(currentPlayer);
-                            System.out.println("Flipping neighbor disc at: " + neighborPos);
                             flipCount++;
                         }
+                        reallyFliped.add(neighborPos);
                     }
                 }
             }
             flipBomb(tempFlippableDiscs);
         }
-        System.out.println("number of flipCount- bomb " + flipCount);
         return flipCount;
     }
 
