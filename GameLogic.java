@@ -13,7 +13,6 @@ public class GameLogic implements PlayableLogic {
     private Stack<Disc[][]> boardHistory = new Stack<>();
 
     List<Position> reallyFliped = new ArrayList<>();
-    List<Position> bombNeighborsToFlip;
     private Set<Position> allFlippedDiscs = new HashSet<>();
 
     @Override
@@ -206,7 +205,6 @@ public class GameLogic implements PlayableLogic {
     public int flipInDirection(int row, int col, boolean toFlip) {
         int totalFlips = 0;
         Player currentPlayer = isFirstPlayerTurn() ? firstPlayer : secondPlayer;
-        bombNeighborsToFlip = new ArrayList<>();
 
         for (int i = 0; i < rowDirections.length; i++) {
             int rowD = rowDirections[i];
@@ -220,22 +218,25 @@ public class GameLogic implements PlayableLogic {
 
                 if (currentDisc.getOwner().equals(currentPlayer)) {
                     if (!canBeFlipped.isEmpty()) {
-                            for (Position pos : canBeFlipped) {
+                        for (Position pos : canBeFlipped) {
+                            totalFlips += canBeFlipped.size();
+                            System.out.println("can be flipped" + canBeFlipped);
+                            reallyFliped.add(pos);
 
-                                if ("💣".equals(board[pos.row()][pos.col()].getType())) {
-                                    List<Position> bombPositions = new ArrayList<>();
-                                    bombPositions.add(pos);
-                                    totalFlips += flipBomb(bombPositions);
-                                }
-                                reallyFliped.add(pos);
+                            if ("💣".equals(board[pos.row()][pos.col()].getType())) {
+                                List<Position> bombPositions = new ArrayList<>();
+                                bombPositions.add(pos);
+                                totalFlips += flipBomb(bombPositions);
                             }
-                        if (to Flip) {
-                                board[pos.row()][pos.col()].setOwner(currentPlayer);
-                                System.out.println("Player " + (isFirstPlayerTurn() ? "1 " : "2 ") + "flipped the disc in " + "(" + pos.row() + "," + pos.col() + ")");
-
                         }
-                        totalFlips += canBeFlipped.size();
+                        if (toFlip) {
+                            //board[pos.row()][pos.col()].setOwner(currentPlayer);
+                            flipOverNeighbor(reallyFliped);
+                        }
                     }
+                    System.out.println("really" + reallyFliped);
+                    //totalFlips = reallyFliped.size();
+                    reallyFliped.clear();
                     break;
                 }
                 //FIXME instaneof
@@ -253,6 +254,7 @@ public class GameLogic implements PlayableLogic {
                 y += colD;
             }
         }
+        System.out.println("total " + totalFlips);
         return totalFlips;
     }
 
@@ -272,7 +274,7 @@ public class GameLogic implements PlayableLogic {
                 if (isInBounds(neighborRow, neighborCol)) {
                     Position neighborPos = new Position(neighborRow, neighborCol);
 
-                    if (!allFlippedDiscs.contains(neighborPos)
+                    if (!reallyFliped.contains(neighborPos)
                             && board[neighborRow][neighborCol] != null
                             && !board[neighborRow][neighborCol].getOwner().equals(currentPlayer)
                             && !"⭕".equals(board[neighborRow][neighborCol].getType())) {
@@ -280,11 +282,7 @@ public class GameLogic implements PlayableLogic {
                         if ("💣".equals(board[neighborRow][neighborCol].getType())) {
                             tempFlippableDiscs.add(neighborPos);
                         }
-
-                        if (allFlippedDiscs.add(neighborPos)) {
-                            board[neighborRow][neighborCol].setOwner(currentPlayer);
-                        }
-                            flipCount++;
+                        flipCount++;
                         reallyFliped.add(neighborPos);
                     }
                 }
@@ -294,6 +292,13 @@ public class GameLogic implements PlayableLogic {
         return flipCount;
     }
 
+    private void flipOverNeighbor(List<Position> reallyFliped) {
+        Player currentPlayer = isFirstPlayerTurn() ? firstPlayer : secondPlayer;
+        for (Position p : reallyFliped) {
+            board[p.row()][p.col()].setOwner(currentPlayer);
+            System.out.println("Player " + (isFirstPlayerTurn() ? "1 " : "2 ") + "flipped the disc in " + "(" + p.row() + "," + p.col() + ")");
+        }
+    }
 
     public boolean isInBounds(int row, int col) {
         return ((row >= 0) && (row < getBoardSize()) && (col >= 0) && (col < getBoardSize()));
