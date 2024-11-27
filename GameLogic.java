@@ -220,32 +220,22 @@ public class GameLogic implements PlayableLogic {
                 if (currentDisc.getOwner().equals(currentPlayer)) {
                     if (!canBeFlipped.isEmpty()) {
                         reallyFliped.addAll(canBeFlipped);
-                        totalFlips += canBeFlipped.size();
+                        //totalFlips += canBeFlipped.size();
                         for (Position pos : canBeFlipped) {
                             System.out.println("can be flipped" + canBeFlipped);
 
                             if ("💣".equals(board[pos.row()][pos.col()].getType())) {
                                 List<Position> bombPositions = new ArrayList<>();
                                 bombPositions.add(pos);
-                                totalFlips += flipBomb(bombPositions);
+                                // totalFlips += flipBomb(bombPositions);
                             }
                         }
-//                        Set<Position> checkedPositions = new HashSet<>();
-//                        for (Position p : reallyFliped) {
-//                            if (!checkedPositions.contains(p)) {
-//                                checkedPositions.add(p);
-//                            } else {
-//                                totalFlips--;
-//                            }
-//                        }
+
                         if (toFlip) {
-                            //board[pos.row()][pos.col()].setOwner(currentPlayer);
                             flipOverNeighbor(reallyFliped);
                         }
                     }
                     System.out.println("really" + reallyFliped);
-                    //totalFlips = reallyFliped.size();
-//                    reallyFliped.clear();
                     break;
                 }
                 //FIXME instaneof
@@ -262,15 +252,16 @@ public class GameLogic implements PlayableLogic {
                 x += rowD;
                 y += colD;
             }
-            for (Position p : reallyFliped) {
-                if (!checkedPositions.contains(p)) {
-                    checkedPositions.add(p);
-                } else {
-                    totalFlips--;
-                }
-            }
+          checkedPositions.addAll(reallyFliped);
             reallyFliped.clear();
         }
+//        for (Position p : checkedPositions) {
+//            if (!checkedPositions.contains(p)) {
+//                checkedPositions.add(p);
+//            } else {
+//                totalFlips--;
+//            }
+//        }
         totalFlips= checkedPositions.size();
         System.out.println(checkedPositions);
         System.out.println("total " + totalFlips);
@@ -344,4 +335,3 @@ public class GameLogic implements PlayableLogic {
     }
 
 }
-

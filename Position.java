@@ -8,12 +8,15 @@ public class Position {
         this.currentCol = col;
         this.currentRow = row;
     }
+
     public int col() {
         return currentCol;
     }
+
     public int row() {
         return currentRow;
     }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
@@ -25,5 +28,12 @@ public class Position {
     @Override
     public String toString() {
         return "Position[x=" + currentCol + ", y=" + currentRow + "]";
+    }
+
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(currentCol, currentRow);
+
     }
 }
