@@ -35,10 +35,10 @@ public class RandomAI extends AIPlayer {
 
         List<Disc> discs = new ArrayList<>();
 
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < number_of_unflippedable; i++) {
             discs.add(new UnflippableDisc(this));
         }
-        for (int i = 0; i < 2; i++) {
+        for (int i = 0; i < number_of_bombs; i++) {
             discs.add(new BombDisc(this));
         }
         int remainingDiscs = 32 - discs.size();

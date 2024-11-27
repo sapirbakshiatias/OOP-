@@ -32,7 +32,4 @@ public class Move {
     public Disc getDisc() {
         return this.disc;
     }
-    public List<Position> getFlippedPositions() {
-        return this.flippedPositions;
-    }
 }
