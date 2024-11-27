@@ -1,6 +1,7 @@
 import java.util.*;
 
 public class GameLogic implements PlayableLogic {
+
     private static final int SIZE = 8;
     private Disc[][] board = new Disc[SIZE][SIZE];
     private Player firstPlayer;
