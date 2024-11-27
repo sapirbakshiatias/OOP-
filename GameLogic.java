@@ -12,9 +12,9 @@ public class GameLogic implements PlayableLogic {
     private Stack<Move> moveHistory = new Stack<>();
     private Stack<List<Position>> flipedHistory = new Stack<>();
 
-    private Stack<Disc[][]> boardHistory = new Stack<>();
+    private  Stack<Disc[][]> boardHistory = new Stack<>();
 
-    List<Position> reallyFliped = new ArrayList<>();
+    private  List<Position> reallyFliped = new ArrayList<>();
 
 
     @Override
@@ -48,7 +48,6 @@ public class GameLogic implements PlayableLogic {
 
     @Override
     public Disc getDiscAtPosition(Position position) {
-        //TODO do all equal same
         if (board[position.row()][position.col()] == null) {
             return null;
         }
@@ -257,7 +256,6 @@ public class GameLogic implements PlayableLogic {
         return totalFlips;
     }
 
-    //todo מה שיניתי ? שזה void
     private void flipBomb(List<Position> bombPositions) {
         int flipCount = 0;
         Player currentPlayer = isFirstPlayerTurn() ? firstPlayer : secondPlayer;
