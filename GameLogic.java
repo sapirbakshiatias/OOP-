@@ -10,7 +10,7 @@ public class GameLogic implements PlayableLogic {
     int[] rowDirections = {-1, -1, -1, 0, 0, 1, 1, 1};
     int[] colDirections = {-1, 0, 1, -1, 1, -1, 0, 1};
     private Stack<Move> moveHistory = new Stack<>();
-    private Stack<Position> flipedHistory = new Stack<>();
+    private Stack<List<Position>> flipedHistory = new Stack<>();
 
     private Stack<Disc[][]> boardHistory = new Stack<>();
 
@@ -26,11 +26,10 @@ public class GameLogic implements PlayableLogic {
                 (currentPlayer.getNumber_of_unflippedable() <= 0) && ("⭕".equals(disc.getType()))) {
             return false;
         }
-
         boardHistory.push(copyBoard());
         disc.setOwner(currentPlayer);
         board[a.row()][a.col()] = disc;
-        System.out.println("Player " + (isFirstPlayerTurn() ? "1 " : "2 ") + "placed a " + disc.getType() + " in " + "(" + a.row() + "," + a.col() + ")");
+        System.out.println("Player " + (isFirstPlayerTurn() ? "1 " : "2 ") + "placed a " + disc.getType() + " in " + "(" + a.row() + "," + a.col() + ")\n");
 
         flipInDirection(a.row(), a.col(), true);
 
@@ -175,9 +174,11 @@ public class GameLogic implements PlayableLogic {
         System.out.println("Undoing last move:");
         System.out.println("\tUndo: removing " + moveHistory.peek().getDisc().getType() + " from " + "(" + moveHistory.peek().getPosition().row() + "," + moveHistory.peek().getPosition().col() + ")\n");
 
-        while (!flipedHistory.isEmpty()) {
-            System.out.println("\tUndo: flipping back " + board[flipedHistory.peek().row()][flipedHistory.peek().col()].getType() + " in (" + flipedHistory.peek().col() + ", " + flipedHistory.peek().row() + ")");
-            flipedHistory.pop();
+        List<Position> lastFlipped = flipedHistory.pop();
+        for (Position pos : lastFlipped) {
+            System.out.println("\tUndo: flipping back " + board[pos.row()][pos.col()].getType() +
+                    " in (" + pos.row() + ", " + pos.col() + ")");
+            board[pos.row()][pos.col()].setOwner(isFirstPlayerTurn() ? secondPlayer : firstPlayer);
         }
         p1Turn = !p1Turn;
         Player currentPlayer = isFirstPlayerTurn() ? firstPlayer : secondPlayer;
@@ -229,7 +230,6 @@ public class GameLogic implements PlayableLogic {
                         }
                         if (toFlip) {
                             flipOverNeighbor(reallyFliped);
-                            flipedHistory.addAll(reallyFliped);
                         }
                     }
                     break;
@@ -249,6 +249,9 @@ public class GameLogic implements PlayableLogic {
             }
             checkedPositions.addAll(reallyFliped);
             reallyFliped.clear();
+        }
+        if (toFlip) {
+            flipedHistory.push(new ArrayList<>(checkedPositions));
         }
         totalFlips = checkedPositions.size();
         return totalFlips;
@@ -291,7 +294,7 @@ public class GameLogic implements PlayableLogic {
         Player currentPlayer = isFirstPlayerTurn() ? firstPlayer : secondPlayer;
         for (Position p : reallyFliped) {
             board[p.row()][p.col()].setOwner(currentPlayer);
-            System.out.println("Player " + (isFirstPlayerTurn() ? "1 " : "2 ") + "flipped the " +  board[p.row()][p.col()].getType() + " (" + p.row() + "," + p.col() + ")");
+            System.out.println("Player " + (isFirstPlayerTurn() ? "1 " : "2 ") + "flipped the " + board[p.row()][p.col()].getType() + " (" + p.row() + "," + p.col() + ")");
         }
     }
 
