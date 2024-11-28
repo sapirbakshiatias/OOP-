@@ -13,9 +13,9 @@ public class GameLogic implements PlayableLogic {
     private Stack<Move> moveHistory = new Stack<>();
     private Stack<List<Position>> flipedHistory = new Stack<>();
 
-    private  Stack<Disc[][]> boardHistory = new Stack<>();
+    private Stack<Disc[][]> boardHistory = new Stack<>();
 
-    private  List<Position> reallyFliped = new ArrayList<>();
+    private List<Position> reallyFliped = new ArrayList<>();
 
 
     @Override
@@ -49,16 +49,17 @@ public class GameLogic implements PlayableLogic {
 
     @Override
     public Disc getDiscAtPosition(Position position) {
-        if (board[position.row()][position.col()] == null) {
+        Disc disc = board[position.row()][position.col()];
+        if (disc == null) {
             return null;
         }
-        if (Objects.equals(board[position.row()][position.col()].getType(), "⭕")) {
-            return new UnflippableDisc(board[position.row()][position.col()].getOwner());
+        if (Objects.equals(disc.getType(), "⭕")) {
+            return new UnflippableDisc(disc.getOwner());
         }
-        if (Objects.equals(board[position.row()][position.col()].getType(), "💣")) {
-            return new BombDisc(board[position.row()][position.col()].getOwner());
+        if (Objects.equals(disc.getType(), "💣")) {
+            return new BombDisc(disc.getOwner());
         }
-        return new SimpleDisc(board[position.row()][position.col()].getOwner());
+        return new SimpleDisc(disc.getOwner());
     }
 
     @Override
@@ -113,37 +114,37 @@ public class GameLogic implements PlayableLogic {
 
     @Override
     public boolean isGameFinished() {
-        ///TODO change
-        validMoves = (ArrayList<Position>) ValidMoves();
+
         if (!validMoves.isEmpty()) {
-            validMoves = null;
             return false;
-        }
-        int player_1_discs = 0;
-        int player_2_discs = 0;
-        for (int i = 0; i < getBoardSize(); i++) {
-            for (int j = 0; j < getBoardSize(); j++) {
-                if (board[i][j] != null) {
-                    if (board[i][j].getOwner() == firstPlayer) {
-                        player_1_discs++;
-                    } else {
-                        player_2_discs++;
+        } else {
+            int player1Discs = 0;
+            int player2Discs = 0;
+            for (int i = 0; i < getBoardSize(); i++) {
+                for (int j = 0; j < getBoardSize(); j++) {
+                    if (board[i][j] != null) {
+                        if (board[i][j].getOwner() == firstPlayer) {
+                            player1Discs++;
+                        } else {
+                            player2Discs++;
+                        }
                     }
                 }
             }
-        }
-        System.out.printf("Player %s wins with %d discs! Player %s had %d discs.\n\n",
-                player_1_discs >= player_2_discs ? "1" : "2",
-                Math.max(player_1_discs, player_2_discs),
-                player_1_discs < player_2_discs ? "1" : "2",
-                Math.min(player_1_discs, player_2_discs));
+            if (player1Discs >= player2Discs) {
+                firstPlayer.addWin();
+            } else {
+                secondPlayer.addWin();
+            }
 
-        if (player_1_discs >= player_2_discs) {
-            firstPlayer.addWin();
-        } else {
-            secondPlayer.addWin();
+            System.out.printf("Player %s wins with %d discs! Player %s had %d discs.\n\n",
+                    player1Discs >= player2Discs ? "1" : "2",
+                    Math.max(player1Discs, player2Discs),
+                    player1Discs < player2Discs ? "1" : "2",
+                    Math.min(player1Discs, player2Discs));
+
+            return true;
         }
-        return true;
     }
 
     @Override
