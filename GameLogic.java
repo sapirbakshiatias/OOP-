@@ -8,14 +8,12 @@ public class GameLogic implements PlayableLogic {
     private Player secondPlayer;
     private boolean p1Turn;
     private ArrayList<Position> validMoves;
-    int[] rowDirections = {-1, -1, -1, 0, 0, 1, 1, 1};
-    int[] colDirections = {-1, 0, 1, -1, 1, -1, 0, 1};
     private Stack<Move> moveHistory = new Stack<>();
     private Stack<List<Position>> flipedHistory = new Stack<>();
-
     private Stack<Disc[][]> boardHistory = new Stack<>();
-
     private List<Position> reallyFliped = new ArrayList<>();
+    int[] rowDirections = {-1, -1, -1, 0, 0, 1, 1, 1};
+    int[] colDirections = {-1, 0, 1, -1, 1, -1, 0, 1};
 
 
     @Override
@@ -30,19 +28,16 @@ public class GameLogic implements PlayableLogic {
         boardHistory.push(copyBoard());
         disc.setOwner(currentPlayer);
         board[a.row()][a.col()] = disc;
-        System.out.println("Player " + (isFirstPlayerTurn() ? "1 " : "2 ") + "placed a " + disc.getType() + " in " + "(" + a.row() + "," + a.col() + ")\n");
+        System.out.println("Player " + (isFirstPlayerTurn() ? "1 " : "2 ") + "placed a " +
+                disc.getType() + " in " + "(" + a.row() + "," + a.col() + ")\n");
 
         flipInDirection(a.row(), a.col(), true);
 
         moveHistory.push(new Move(a, disc));
 
-        if ("💣".equals(disc.getType())) {
-            currentPlayer.reduce_bomb();
-        }
-        if ("⭕".equals(disc.getType())) {
-            currentPlayer.reduce_unflippedable();
-        }
-        p1Turn = !p1Turn; // Switch turn
+        ReduceDiscType(disc, currentPlayer);
+
+        p1Turn = !p1Turn;
         System.out.println();
         return true;
     }
@@ -78,7 +73,6 @@ public class GameLogic implements PlayableLogic {
                     if (flips > 0) {
                         validMoves.add(position);
                     }
-
                 }
             }
         }
@@ -114,12 +108,12 @@ public class GameLogic implements PlayableLogic {
 
     @Override
     public boolean isGameFinished() {
-
         if (!validMoves.isEmpty()) {
             return false;
         } else {
             int player1Discs = 0;
             int player2Discs = 0;
+
             for (int i = 0; i < getBoardSize(); i++) {
                 for (int j = 0; j < getBoardSize(); j++) {
                     if (board[i][j] != null) {
@@ -154,11 +148,12 @@ public class GameLogic implements PlayableLogic {
                 board[i][j] = null;
             }
         }
-        // setup
-        board[(SIZE + 1) / 2][(SIZE + 1) / 2] = new SimpleDisc(getFirstPlayer()); //[4][4]
-        board[(SIZE - 1) / 2][(SIZE - 1) / 2] = new SimpleDisc(getFirstPlayer()); //[3][3]
-        board[(SIZE + 1) / 2][(SIZE - 1) / 2] = new SimpleDisc(getSecondPlayer()); //[4][3]
-        board[(SIZE - 1) / 2][(SIZE + 1) / 2] = new SimpleDisc(getSecondPlayer()); //[3][4]
+        int center = SIZE / 2;
+        board[center][center] = new SimpleDisc(getFirstPlayer()); // [4][4]
+        board[center - 1][center - 1] = new SimpleDisc(getFirstPlayer()); // [3][3]
+        board[center][center - 1] = new SimpleDisc(getSecondPlayer()); // [4][3]
+        board[center - 1][center] = new SimpleDisc(getSecondPlayer()); // [3][4]
+
         firstPlayer.reset_bombs_and_unflippedable();
         secondPlayer.reset_bombs_and_unflippedable();
         moveHistory.clear();
@@ -173,7 +168,9 @@ public class GameLogic implements PlayableLogic {
             return;
         }
         System.out.println("Undoing last move:");
-        System.out.println("\tUndo: removing " + moveHistory.peek().getDisc().getType() + " from " + "(" + moveHistory.peek().getPosition().row() + "," + moveHistory.peek().getPosition().col() + ")\n");
+        Move lastMove = moveHistory.peek();
+
+        System.out.println("\tUndo: removing " + lastMove.getDisc().getType() + " from " + "(" + lastMove.getPosition().row() + "," + lastMove.getPosition().col() + ")\n");
 
         List<Position> lastFlipped = flipedHistory.pop();
         for (Position pos : lastFlipped) {
@@ -182,19 +179,24 @@ public class GameLogic implements PlayableLogic {
             board[pos.row()][pos.col()].setOwner(isFirstPlayerTurn() ? secondPlayer : firstPlayer);
         }
         p1Turn = !p1Turn;
-        Player currentPlayer = isFirstPlayerTurn() ? firstPlayer : secondPlayer;
 
-        if (moveHistory.peek().getDisc().getType().equals("💣")) {
-            currentPlayer.number_of_bombs++;
-        }
+        addDiscType(lastMove);
 
-        if (moveHistory.peek().getDisc().getType().equals("⭕")) {
-            currentPlayer.number_of_unflippedable++;
-        }
         moveHistory.pop();
         board = boardHistory.pop();
         validMoves = new ArrayList<>(ValidMoves());
         System.out.println();
+    }
+    private void addDiscType(Move lastMove) {
+        Player currentPlayer = isFirstPlayerTurn() ? firstPlayer : secondPlayer;
+
+        if ("💣".equals(lastMove.getDisc().getType())) {
+            currentPlayer.number_of_bombs++;
+        }
+
+        if ("⭕".equals(lastMove.getDisc().getType())) {
+            currentPlayer.number_of_unflippedable++;
+        }
     }
 
     public boolean positionIsEmpty(Position position) {
@@ -317,9 +319,17 @@ public class GameLogic implements PlayableLogic {
                     copy[i][j] = new SimpleDisc(disc.getOwner());
                 }
             }
-
         }
         return copy;
     }
+    private void ReduceDiscType(Disc disc, Player currentPlayer) {
+        if ("💣".equals(disc.getType())) {
+            currentPlayer.reduce_bomb();
+        }
+        if ("⭕".equals(disc.getType())) {
+            currentPlayer.reduce_unflippedable();
+        }
+    }
+
 
 }
