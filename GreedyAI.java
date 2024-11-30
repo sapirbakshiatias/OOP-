@@ -1,11 +1,22 @@
 import java.util.Comparator;
 import java.util.List;
-
+/**
+ * AI player that selects moves maximizing the number of discs flipped.
+ */
 public class GreedyAI extends AIPlayer {
     public GreedyAI(boolean isPlayerOne) {
         super(isPlayerOne);
     }
-
+    /**
+     * Selects the best move for the AI player using a greedy algorithm.
+     * The move is chosen based on maximizing the number of discs flipped,
+     * and in case of a tie, it is resolved by row and column order.
+     *
+     * @param gameStatus the current state of the game, which provides information
+     *                   about valid moves and game rules.
+     * @return the best move as determined by the greedy algorithm, or a default move
+     *         if no valid moves are available.
+     */
     @Override
     public Move makeMove(PlayableLogic gameStatus) {
         if (gameStatus instanceof GameLogic gameLogic) {
@@ -18,7 +29,7 @@ public class GreedyAI extends AIPlayer {
                 Position bestMove = null;
                 int maxFlips = -1;
 
-                Comparator<Position> positionComparator = new ComCol().thenComparing(new CompRow());
+                Comparator<Position> positionComparator = new CompCol().thenComparing(new CompRow());
 
                 for (Position move : validMoves) {
                     int flips = gameStatus.countFlips(move);

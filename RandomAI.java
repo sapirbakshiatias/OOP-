@@ -2,12 +2,26 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
+/**
+ * AI player that makes random moves during the game.
+ */
 public class RandomAI extends AIPlayer {
-
+    /**
+     * Constructs a RandomAI player.
+     *
+     * @param isPlayerOne whether the player is Player 1.
+     */
     public RandomAI(boolean isPlayerOne) {
         super(isPlayerOne);
     }
 
+    /**
+     * Executes the AI player's move. Chooses a random valid position and places a random disc.
+     * If no valid moves are available, the game state is checked for completion and reset if necessary.
+     *
+     * @param gameStatus the current state of the game.
+     * @return the chosen Move, or a default end-game move if no valid moves exist.
+     */
     @Override
     public Move makeMove(PlayableLogic gameStatus) {
         if (gameStatus instanceof GameLogic gameLogic) {
@@ -29,7 +43,11 @@ public class RandomAI extends AIPlayer {
         Disc dummyDisc = new SimpleDisc(this);
         return new Move(endGamePosition, dummyDisc);
     }
-
+    /**
+     * Chooses a random disc type for the AI to place.
+     *
+     * @return a randomly selected Disc.
+     */
     private Disc chooseRandomDisc() {
         Random rand = new Random();
 
